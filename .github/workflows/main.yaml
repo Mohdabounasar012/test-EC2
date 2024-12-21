@@ -1,0 +1,35 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Trigger the action on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository's code
+      - name: Checkout code
+        uses: actions/checkout@main
+
+      # Set up SSH keys to access EC2 instance
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+      # Deploy using rsync or SCP (e.g., upload index.html or full application)
+      - name: Deploy to EC2 via rsync
+        run: |
+          # Ensure the remote directory exists
+          ssh -o StrictHostKeyChecking=no ubuntu@51.20.95.158 "mkdir -p /var/www/html"
+          
+          # Sync files to EC2 instance
+          rsync -avz --exclude='.git*' --exclude='node_modules' ./ ubuntu@51.20.95.158:/var/www/html/
+
+      # Restart Apache to apply changes
+      - name: Restart Apache
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@51.20.95.158 "sudo systemctl restart apache2"
