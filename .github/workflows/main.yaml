@@ -31,7 +31,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@51.20.187.120 "sudo mkdir -p /var/www/html && sudo chown ubuntu:ubuntu /var/www/html"
           
           # Deploy index.html and Abu.html files to the EC2 server
-          rsync -avz --exclude='.git*' --exclude='node_modules' --delete ./index.html ubuntu@51.20.187.120:/var/www/html/
           rsync -avz --exclude='.git*' --exclude='node_modules' --delete ./Abou.html ubuntu@51.20.187.120:/var/www/html/
 
       # Step 5: Restart Apache to apply the changes
