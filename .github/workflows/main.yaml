@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy HTML files to EC2
 
 on:
   push:
@@ -7,29 +7,34 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # The OS on which the action runs
 
     steps:
-      # Checkout the repository's code
+      # Step 1: Checkout the repository's code
       - name: Checkout code
-        uses: actions/checkout@main
+        uses: actions/checkout@v3  # Use the latest stable version of the checkout action
 
-      # Set up SSH keys to access EC2 instance
+      # Step 2: List files in the repository (for debugging purposes)
+      - name: List files in the repository
+        run: ls -al
+
+      # Step 3: Set up SSH to connect to EC2
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}  # Add the SSH private key to GitHub secrets
 
-      # Deploy using rsync or SCP (e.g., upload index.html or full application)
-      - name: Deploy to EC2 via rsync
+      # Step 4: Deploy index.html and Abu.html to EC2 instance
+      - name: Deploy HTML files to EC2
         run: |
-          # Ensure the remote directory exists
-          ssh -o StrictHostKeyChecking=no ubuntu@51.20.95.158 "mkdir -p /var/www/html"
+          # Ensure the remote directory exists and has the correct ownership
+          ssh -o StrictHostKeyChecking=no ubuntu@51.20.187.120 "sudo mkdir -p /var/www/html && sudo chown ubuntu:ubuntu /var/www/html"
           
-          # Sync files to EC2 instance
-          rsync -avz --exclude='.git*' --exclude='node_modules' ./ ubuntu@51.20.95.158:/var/www/html/
+          # Deploy index.html and Abu.html files to the EC2 server
+          rsync -avz --exclude='.git*' --exclude='node_modules' --delete ./index.html ubuntu@51.20.187.120:/var/www/html/
+          rsync -avz --exclude='.git*' --exclude='node_modules' --delete ./Abou.html ubuntu@51.20.187.120:/var/www/html/
 
-      # Restart Apache to apply changes
+      # Step 5: Restart Apache to apply the changes
       - name: Restart Apache
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@51.20.95.158 "sudo systemctl restart apache2"
+          ssh -o StrictHostKeyChecking=no ubuntu@51.20.187.120 "sudo systemctl restart apache2"
